@@ -2,8 +2,11 @@
 <html>
    <head>
       <title>Система управления теплицей</title>
-      <link rel="stylesheet" href="css/globalStyle.css">
+      <link rel="stylesheet" href="style.css">
       <meta charset="UTF-8"/>
+      <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.1/jquery.min.js" ></script>
+      <script type="text/javascript" src="https://unpkg.com/axios/dist/axios.min.js"></script>
+      <script type="text/javascript" src="https://cdn.plot.ly/plotly-latest.min.js"></script>
    </head>
    <body>
       <div id="menu">
@@ -39,30 +42,28 @@
             </div>
          </div>
          <div id="sensorData">
-            <h3>Датчики температуры и влажности воздуха</h3>
-            <h4>Датчик 1</h4>
-            <p>Текущее значение: 20C, 50%</p>
-            <h4>Датчик 2</h4>
-            <p>Текущее значение: 20C, 50%</p>
-            <h4>Датчик 3</h4>
-            <p>Текущее значение: 20C, 50%</p>
-            <h4>Датчик 4</h4>
-            <p>Текущее значение: 20C, 50%</p>
-            <h3>Датчики влажности почвы</h3>
-            <h4>Датчик 1</h4>
-            <p>Текущее значение: 35%</p>
-            <h4>Датчик 2</h4>
-            <p>Текущее значение: 35%</p>
-            <h4>Датчик 3</h4>
-            <p>Текущее значение: 35%</p>
-            <h4>Датчик 4</h4>
-            <p>Текущее значение: 35%</p>
-            <h4>Датчик 5</h4>
-            <p>Текущее значение: 35%</p>
-            <h4>Датчик 6</h4>
-            <p>Текущее значение: 35%</p>
+            <p>Датчик температуры и влажности воздуха 1<p>
+            <div id="air_1_chart"></div>
+            <p>Датчик температуры и влажности воздуха 2</p>
+            <div id="air_2_chart"></div>
+            <p>Датчик температуры и влажности воздуха 3</p>
+            <div id="air_3_chart"></div>
+            <p>Датчик температуры и влажности воздуха 4</p>
+            <div id="air_4_chart"></div>
+            <p>Датчик влажности почвы 1</p>
+            <div id="soil_1_chart"></div>
+            <p>Датчик влажности почвы 2</p>
+            <div id="soil_2_chart"></div>
+            <p>Датчик влажности почвы 3</p>
+            <div id="soil_3_chart"></div>
+            <p>Датчик влажности почвы 4</p>
+            <div id="soil_4_chart"></div>
+            <p>Датчик влажности почвы 5</p>
+            <div id="soil_5_chart"></div>
+            <p>Датчик влажности почвы 6</p>
+            <div id="soil_6_chart"></div>
+            <script src="main.js"></script>
          </div>
-      </div>
       </div>
    </body>
 </html>
