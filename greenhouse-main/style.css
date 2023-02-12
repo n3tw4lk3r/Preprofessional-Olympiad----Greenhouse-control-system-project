@@ -39,7 +39,7 @@ p{
 
 
 #menu{
-    height: 80px;
+    height: 40px;
     top: 0px;
     left: 0px;
     margin-top: 10px;
@@ -53,10 +53,13 @@ p{
     width: 100%;
 }
 
+#set{
+  display: inline-block;
+}
+
 #controlZone{
     position: absolute;
     margin-left: -68px;
-    margin-top: 40px;
     height: 550px;
     width: 84%;
 }
@@ -64,21 +67,17 @@ p{
 #sensorData{
     position: absolute;
     background-color: #fffffe;
-    margin-top: 590px;
+    margin-top: 570px;
     margin-left: -68px;
     padding-top: 10px;
     height: 5000px;
     width: 84%;
 }
 
-#graph{
-    background-color: #0f0e17;
-    margin-left: 260px;
-    width: 10%;
-}
 
 #btn-group{
     padding-left: 150px;
+    padding-bottom: 60px;
 }
 
 .sidenav {
@@ -113,21 +112,6 @@ p{
 @font-face {
     font-family: "OpenSansItalic"; 
     src: url("../../fonts/OpenSans/OpenSans-Italic.ttf"); 
-}
-
-
-.button {
-    border: none;
-    color: #fffffe;
-    padding: 15px 32px;
-    text-align: center;
-    display: inline-block;
-    font-size: 16px;
-    margin-top: 10px;
-    margin-left: 25px;
-    cursor: pointer;
-    border-radius: 4px;
-    width: 200px;
 }
 
 .switch {
@@ -210,10 +194,9 @@ p{
   .button {
     display: inline-block;
     padding: 15px 25px;
-    margin-left: 153px;
-    margin-bottom: 20px;
+    margin-left: 70px;
     font-size: 24px;
-    width: 100px;
+    width: 170px;
     cursor: pointer;
     text-align: center;
     text-decoration: none;
