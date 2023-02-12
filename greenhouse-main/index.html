@@ -2,22 +2,20 @@
 <html>
    <head>
       <title>Система управления теплицей</title>
-      <link rel="stylesheet" href="style.css">
+      <link rel="stylesheet" href="Globalstyle.css">
       <meta charset="UTF-8"/>
       <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.1/jquery.min.js" ></script>
       <script type="text/javascript" src="https://unpkg.com/axios/dist/axios.min.js"></script>
       <script type="text/javascript" src="https://cdn.plot.ly/plotly-latest.min.js"></script>
    </head>
    <body>
-      <div id="menu">
-         <h1>Система управления теплицей</h1>
-      </div>
       <div class="sidenav">
-         <a>Открытие форточек</a>
-         <a>Полив</a>
-         <a>Увлажнение</a>
+         <a>Панель управления</a>
          <a>Датчики температуры и влажности воздуха</a>
+         <a>1 - 2 - 3 - 4</a>
          <a>Датчики влажности почвы</a>
+         <a>1 - 2 - 3 - 4 - 5 - 6</a>
+         <a>Средняя температура и влажность </a>
          <div class="emergencyLine"></div>
          <a>Режим экстренного управления</a>
          <label class="switch">
@@ -27,41 +25,74 @@
       </div>
       <div id="main">
          <div id="controlZone">
-            <h2>Открыть все форточки</h2>
-            <button class="button"> -- </button>
-            <h2>Запуск системы увлажнения</h2>
-            <button class="button"> --  </button>
+            <div id="set">
+               <h2>Задать параметр T</h2>
+               <button class="button" onclick="setParam('T', T, getElementById('T').value);">--</button>
+               <input type="number" id="T" min="-100" max="100" style="width:50px;">
+            </div>
+            
+            <div id="set">
+               <h2>Задать параметр H</h2>
+               <button class="button" onclick="setParam('H', H, getElementById('H').value);">--</button>
+               <input type="number" id="H" min="-100" max="100" style="width:50px;">
+            </div>
+
+            <div id="set">
+               <h2>Задать параметр Hb</h2>
+               <button class="button" onclick="setParam('Hb', Hb, getElementById('Hb').value);">--</button>
+               <input type="number" id="Hb" min="-100" max="100" style="width:50px;">
+            </div>
+            <br>
+            <div id="set">
+            <h2>Управление форточками</h2>
+            <button class="button" onclick="patchRequest(url_forkDrive, 'fork_drive', 1, 0);">Открыть</button>
+            <button class="button" onclick="patchRequest(url_forkDrive, 'fork_drive', 0, 0);">Закрыть</button>
+         </div>
+         <div id="set">
+            <h2>Управление системой увлажнения</h2>
+            <button class="button" onclick="patchRequest(url_totalHum, 'total_hum', 1, 0);">Включить</button>
+            <button class="button" onclick="patchRequest(url_totalHum, 'total_hum', 0, 0);">Отключить</button>
+         </div>
             <h2>Запуск полива грядок</h2>
             <div id="btn-group">
-               <button class="button-Group">1</button>
-               <button class="button-Group">2</button>
-               <button class="button-Group">3</button>
-               <button class="button-Group">4</button>
-               <button class="button-Group">5</button>
-               <button class="button-Group">6</button>
+               <button class="button-Group" onclick="patchRequest(url_watering_open, 'watering', 1, 1);">1</button>
+               <button class="button-Group" onclick="patchRequest(url_watering_open, 'watering', 1, 2);">2</button>>2</button>
+               <button class="button-Group" onclick="patchRequest(url_watering_open, 'watering', 1, 3);">3</button>
+               <button class="button-Group" onclick="patchRequest(url_watering_open, 'watering', 1, 4);">4</button>
+               <button class="button-Group" onclick="patchRequest(url_watering_open, 'watering', 1, 5);">5</button>
+               <button class="button-Group" onclick="patchRequest(url_watering_open, 'watering', 1, 6);">6</button>
+            </div>
+            <h2>Прекращение полива грядок</h2>
+            <div id="btn-group">
+               <button class="button-Group" onclick="patchRequest(url_watering_close, 'watering', 0, 1);">1</button>
+               <button class="button-Group" onclick="patchRequest(url_watering_close, 'watering', 0, 2);">2</button>
+               <button class="button-Group" onclick="patchRequest(url_watering_close, 'watering', 0, 3);">3</button>
+               <button class="button-Group" onclick="patchRequest(url_watering_close, 'watering', 0, 4);">4</button>
+               <button class="button-Group" onclick="patchRequest(url_watering_close, 'watering', 0, 5);">5</button>
+               <button class="button-Group" onclick="patchRequest(url_watering_close, 'watering', 0, 6);">6</button>
             </div>
          </div>
          <div id="sensorData">
             <p>Датчик температуры и влажности воздуха 1<p>
-            <div id="air_1_chart"></div>
+            <div id="chart_air_1"></div>
             <p>Датчик температуры и влажности воздуха 2</p>
-            <div id="air_2_chart"></div>
+            <div id="chart_air_2"></div>
             <p>Датчик температуры и влажности воздуха 3</p>
-            <div id="air_3_chart"></div>
+            <div id="chart_air_3"></div>
             <p>Датчик температуры и влажности воздуха 4</p>
-            <div id="air_4_chart"></div>
+            <div id="chart_air_4"></div>
             <p>Датчик влажности почвы 1</p>
-            <div id="soil_1_chart"></div>
+            <div id="chart_soil_1"></div>
             <p>Датчик влажности почвы 2</p>
-            <div id="soil_2_chart"></div>
+            <div id="chart_soil_2"></div>
             <p>Датчик влажности почвы 3</p>
-            <div id="soil_3_chart"></div>
+            <div id="chart_soil_3"></div>
             <p>Датчик влажности почвы 4</p>
-            <div id="soil_4_chart"></div>
+            <div id="chart_soil_4"></div>
             <p>Датчик влажности почвы 5</p>
-            <div id="soil_5_chart"></div>
+            <div id="chart_soil_5"></div>
             <p>Датчик влажности почвы 6</p>
-            <div id="soil_6_chart"></div>
+            <div id="chart_soil_6"></div>
             <script src="main.js"></script>
          </div>
       </div>
