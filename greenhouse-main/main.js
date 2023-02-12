@@ -1,221 +1,230 @@
-// Не забыть: токен в заголовок всех запросов
+// Не забыть добавить токен в заголовок всех запросов
 // axios.defaults.headers.common["X-Auth-Token"] = "<token>"
 
+let T = null;
+let H = null;
+let Hb = null;
+
 // данные с датчиков
-let air_1_temp = null;
-let air_1_hum = null;
-let air_2_temp = null;
-let air_2_hum = null;
-let air_3_temp = null;
-let air_3_hum = null;
-let air_4_temp = null;
-let air_4_hum = null;
-let soil_1_hum = null;
-let soil_2_hum = null;
-let soil_3_hum = null;
-let soil_4_hum = null;
-let soil_5_hum = null;
-let soil_6_hum = null;
+let air_temp = [null, null, null, null];
+let air_hum = [null, null, null, null];
+let soil_hum = [null, null, null, null, null, null];
 
-// URL API датчиков и т.п.
-// (используется proxy для обхода CORS)
-const air_1 = "https://api.codetabs.com/v1/proxy/?quest=https://dt.miet.ru/ppo_it/api/temp_hum/1";
-const air_2 = "https://api.codetabs.com/v1/proxy/?quest=https://dt.miet.ru/ppo_it/api/temp_hum/2";
-const air_3 = "https://api.codetabs.com/v1/proxy/?quest=https://dt.miet.ru/ppo_it/api/temp_hum/3";
-const air_4 = "https://api.codetabs.com/v1/proxy/?quest=https://dt.miet.ru/ppo_it/api/temp_hum/4";
-const soil_1 = "https://api.codetabs.com/v1/proxy/?quest=https://dt.miet.ru/ppo_it/api/hum/1";
-const soil_2 = "https://api.codetabs.com/v1/proxy/?quest=https://dt.miet.ru/ppo_it/api/hum/2";
-const soil_3 = "https://api.codetabs.com/v1/proxy/?quest=https://dt.miet.ru/ppo_it/api/hum/3";
-const soil_4 = "https://api.codetabs.com/v1/proxy/?quest=https://dt.miet.ru/ppo_it/api/hum/4";
-const soil_5 = "https://api.codetabs.com/v1/proxy/?quest=https://dt.miet.ru/ppo_it/api/hum/5";
-const soil_6 = "https://api.codetabs.com/v1/proxy/?quest=https://dt.miet.ru/ppo_it/api/hum/6";
+// состояния систем
+let watering = null;
+let fork_drive = null;
+let soil_watering = [null, null, null, null, null, null];
 
-function getSensorData() {
-    axios.get(air_1)
-    .then(response => {
-        air_1_temp = response.data.temperature;
-        air_1_hum = response.data.humidity;
-    })
-    axios.get(air_2)
-    .then(response => {
-        air_2_temp = response.data.temperature;
-        air_2_hum = response.data.humidity;
-    })
-    axios.get(air_3)
-    .then(response => {
-        air_3_temp = response.data.temperature;
-        air_3_hum = response.data.humidity;
-    })
-    axios.get(air_4)
-    .then(response => {
-        air_4_temp = response.data.temperature;
-        air_4_hum = response.data.humidity;
-    })
-    axios.get(soil_1)
-    .then(response => {
-        soil_1_hum = response.data.humidity;
-    })
-    axios.get(soil_2)
-    .then(response => {
-        soil_2_hum = response.data.humidity;
-    })
-    axios.get(soil_3)
-    .then(response => {
-        soil_3_hum = response.data.humidity;
-    })
-    axios.get(soil_4)
-    .then(response => {
-        soil_4_hum = response.data.humidity;
-    })
-    axios.get(soil_5)
-    .then(response => {
-        soil_5_hum = response.data.humidity;
-    })
-    axios.get(soil_6)
-    .then(response => {
-        soil_6_hum = response.data.humidity;
-    })
+// средние значения
+
+// т.к. по ТЗ хотят видеть динамику изменения средней температуры и влажности,
+// считаю средние данные "в моменте", как среднее от данных всех датчиков
+// влажности или температуры в момент запроса 
+
+let temp_average = null;
+let hum_average = null;
+
+// для каждой бороздки почвы средняя влажность - сумма всех значений влажности,
+// разделённая на общее кол-во запросов
+
+// сумма всех значений влажности почвы
+let soil_hum_total = [null, null, null, null, null, null];
+
+// средняя влажность
+let soil_hum_average = [null, null, null, null, null, null];
+
+// сколько раз запрашивались данные (кол-во вызовов функции getSensorData)
+let count = 0; 
+
+let url_air = "http://91.240.84.86:5000/get?sensor_type=temp_hum&sensor_id=";
+let url_soil = "http://91.240.84.86:5000/get?sensor_type=hum&sensor_id=";
+let url_forkDrive = "http://91.240.84.86:5000/patch?target=fork_drive&state=";
+let url_watering_open = "http://91.240.84.86:5000/patch?target=watering&state=1&id=";
+let url_watering_close = "http://91.240.84.86:5000/patch?target=watering&state=0&id=";
+let url_totalHum = "http://91.240.84.86:5000/patch?target=total_hum&state=";
+
+function patchRequest(url, target, state, id) {
+    if (target == watering) {
+        axios.get(url+id.toString())
+        .then(response => {
+            alert(JSON.stringify(response.data));
+        })
+    }
+    else {
+        axios.get(url+state.toString())
+        .then(response => {
+            alert(JSON.stringify(response.data));
+        })
+    }
 }
 
+function setParam(name, param, data) {
+    param = data;
+    alert(name + " теперь " + param);
+}
+
+function getSensorData() {
+    // функция была вызвана ещё раз
+    count++;
+    // получаем данные с каждого датчика, сохраняем в массивы air_temp и air_hum
+    for (let air_sensor_id = 0; air_sensor_id < 4; air_sensor_id++) {
+        axios.get(url_air + (air_sensor_id + 1).toString())
+            .then(response => {
+                air_temp[air_sensor_id] = response.data.temperature;
+                air_hum[air_sensor_id] = response.data.humidity;
+            })
+    }
+
+    temp_average = (air_temp[0] + air_temp[1] + air_temp[2] + air_temp[3]) / 4;
+    hum_average = (air_hum[0] + air_hum[1] + air_hum[2] + air_hum[3]) / 4;
+
+    for (let soil_sensor_id = 0; soil_sensor_id < 6; soil_sensor_id++) {
+        axios.get(url_soil + (soil_sensor_id + 1).toString())
+            .then(response => {
+                soil_hum[soil_sensor_id] = response.data.humidity;
+                soil_hum_total[soil_sensor_id] += response.data.humidity;
+                soil_hum_average[soil_sensor_id] = soil_hum_total[soil_sensor_id] / count;
+            })
+    }
+
+}
+
+function createChart_soil(divId, data_hum) {
+    Plotly.plot(divId, [{
+        y: [data_hum],
+        type: 'line'
+    }]);
+}
+
+function createChart_air(divId, data_hum, data_temp) {
+    Plotly.plot(divId,
+        [{
+                y: [data_hum],
+                type: 'line',
+                name: "Влажность",
+            },
+            {
+                y: [data_temp],
+                type: 'line',
+                name: "Температура"
+            }
+        ],
+    );
+}
+
+function updateChart_soil(divId, data_hum) {
+    Plotly.extendTraces(divId, {
+        y: [
+            [data_hum]
+        ]
+    }, [0]);
+}
+
+function updateChart_air(divId, data_hum, data_temp) {
+    Plotly.extendTraces(divId, {
+        y: [
+            [data_hum],
+            [data_temp]
+        ]
+    }, [0, 1]);
+}
+
+// получаем первые данные с датчиков
 getSensorData();
+
+// регулярно запрашиваем новые
 setInterval(async () => {
-    await getSensorData()
+    getSensorData()
 }, 200);
 
-Plotly.plot('soil_1_chart', [{
-    y: [soil_1_hum],
-    type: 'line'
-}]);
-Plotly.plot('soil_2_chart', [{
-    y: [soil_2_hum],
-    type: 'line'
-}]);
-Plotly.plot('soil_3_chart', [{
-    y: [soil_3_hum],
-    type: 'line'
-}]);
-Plotly.plot('soil_4_chart', [{
-    y: [soil_4_hum],
-    type: 'line'
-}]);
-Plotly.plot('soil_5_chart', [{
-    y: [soil_5_hum],
-    type: 'line'
-}]);
-Plotly.plot('soil_6_chart', [{
-    y: [soil_6_hum],
-    type: 'line'
-}]);
+// создаём графики
+for (let soil_sensor_id = 0; soil_sensor_id < 6; soil_sensor_id++) {
+    createChart_soil('chart_soil_' + (soil_sensor_id + 1).toString(),
+        soil_hum[soil_sensor_id]
+);
+}
+for (let air_sensor_id = 0; air_sensor_id < 4; air_sensor_id++) {
+    createChart_air('chart_air_' + (air_sensor_id + 1).toString(),
+        air_hum[air_sensor_id], air_temp[air_sensor_id]
+    );
+}
 
-Plotly.plot('air_1_chart', 
-    [{
-        y: [air_1_hum],
-        type: 'line',
-        name: "Влажность",
-    }, 
-    {
-        y: [air_1_temp],
-        type: 'line',
-        name: "Температура"
-    }],
-);
-Plotly.plot('air_2_chart', 
-    [{
-        y: [air_2_hum],
-        type: 'line',
-        name: "Влажность",
-    }, 
-    {
-        y: [air_2_temp],
-        type: 'line',
-        name: "Температура"
-    }],
-);
-Plotly.plot('air_3_chart', 
-    [{
-        y: [air_3_hum],
-        type: 'line',
-        name: "Влажность",
-    }, 
-    {
-        y: [air_3_temp],
-        type: 'line',
-        name: "Температура"
-    }],
-);
-Plotly.plot('air_4_chart', 
-    [{
-        y: [air_4_hum],
-        type: 'line',
-        name: "Влажность",
-    }, 
-    {
-        y: [air_4_temp],
-        type: 'line',
-        name: "Температура"
-    }],
-);
+// обновляем графики с учётом новых данных каждые N секунд
+
+// ------------------------------------------------------------------------------
+// код ниже "красивый", но он не работает... Придётся использовать "грязный"
+/*
+for (let soil_sensor_id = 0; soil_sensor_id < 6; soil_sensor_id++) {
+    setInterval(updateChart_soil('chart_soil_' + (soil_sensor_id + 1).toString(),
+            soil_hum[soil_sensor_id]), 200);
+}
+for (let air_sensor_id = 0; air_sensor_id < 4; air_sensor_id++) {
+    setInterval(updateChart_air('chart_air_' + (air_sensor_id + 1).toString(),
+            air_hum[air_sensor_id], air_temp[air_sensor_id]), 200);
+}
+*/
+// ------------------------------------------------------------------------------
 
 setInterval(function() {
-    Plotly.extendTraces('soil_1_chart', {
+    Plotly.extendTraces('chart_soil_1', {
         y: [
-            [soil_1_hum]
+            [soil_hum[0]]
         ]
     }, [0]);
 }, 200);
 setInterval(function() {
-    Plotly.extendTraces('soil_2_chart', {
+    Plotly.extendTraces('chart_soil_2', {
         y: [
-            [soil_2_hum]
+            [soil_hum[1]]
         ]
     }, [0]);
 }, 200);
 setInterval(function() {
-    Plotly.extendTraces('soil_3_chart', {
+    Plotly.extendTraces('chart_soil_3', {
         y: [
-            [soil_3_hum]
+            [soil_hum[2]]
         ]
     }, [0]);
 }, 200);
 setInterval(function() {
-    Plotly.extendTraces('soil_4_chart', {
+    Plotly.extendTraces('chart_soil_4', {
         y: [
-            [soil_4_hum]
+            [soil_hum[3]]
         ]
     }, [0]);
 }, 200);
 setInterval(function() {
-    Plotly.extendTraces('soil_5_chart', {
+    Plotly.extendTraces('chart_soil_5', {
         y: [
-            [soil_5_hum]
+            [soil_hum[4]]
         ]
     }, [0]);
 }, 200);
 setInterval(function() {
-    Plotly.extendTraces('soil_6_chart', {
+    Plotly.extendTraces('chart_soil_6', {
         y: [
-            [soil_6_hum]
+            [soil_hum[5]]
         ]
     }, [0]);
 }, 200);
 
 setInterval(function() {
-    Plotly.extendTraces('air_1_chart', {
-        y: [[air_1_hum], [air_1_temp]]
+    Plotly.extendTraces('chart_air_1', {
+        y: [[air_hum[0]], [air_temp[0]]]
     }, [0, 1]);
 }, 200);
 setInterval(function() {
-    Plotly.extendTraces('air_2_chart', {
-        y: [[air_2_hum], [air_2_temp]]
+    Plotly.extendTraces('chart_air_2', {
+        y: [[air_hum[1]], [air_temp[1]]]
     }, [0, 1]);
 }, 200);
 setInterval(function() {
-    Plotly.extendTraces('air_3_chart', {
-        y: [[air_3_hum], [air_3_temp]]
+    Plotly.extendTraces('chart_air_3', {
+        y: [[air_hum[2]], [air_temp[2]]]
     }, [0, 1]);
 }, 200);
 setInterval(function() {
-    Plotly.extendTraces('air_4_chart', {
-        y: [[air_4_hum], [air_4_temp]]
+    Plotly.extendTraces('chart_air_4', {
+        y: [[air_hum[3]], [air_temp[3]]]
     }, [0, 1]);
 }, 200);
