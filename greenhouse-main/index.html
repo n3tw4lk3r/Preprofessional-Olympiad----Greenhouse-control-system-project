@@ -2,97 +2,194 @@
 <html>
    <head>
       <title>Система управления теплицей</title>
-      <link rel="stylesheet" href="Globalstyle.css">
+      <link rel="stylesheet" href="style.css">
       <meta charset="UTF-8"/>
-      <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.1/jquery.min.js" ></script>
-      <script type="text/javascript" src="https://unpkg.com/axios/dist/axios.min.js"></script>
+      <script type="text/javascript" src="axios.min.js"></script>
       <script type="text/javascript" src="https://cdn.plot.ly/plotly-latest.min.js"></script>
    </head>
    <body>
       <div class="sidenav">
-         <a>Панель управления</a>
-         <a>Датчики температуры и влажности воздуха</a>
-         <a>1 - 2 - 3 - 4</a>
-         <a>Датчики влажности почвы</a>
-         <a>1 - 2 - 3 - 4 - 5 - 6</a>
-         <a>Средняя температура и влажность </a>
+         <p2> <a href="#controlZone">Панель управления</a></p2>
          <div class="emergencyLine"></div>
-         <a>Режим экстренного управления</a>
-         <label class="switch">
-         <input type="checkbox">
-         <span class="slider round"></span>
-         </label>
+         <p2> <a href="#table">Сводная таблица</a></p2>
+         <p2>Воздух - графики</p2>
+         <p2> <a href="#air_1">1</a> - <a href="#air_2">2</a> - <a href="#air_3">3</a> - <a href="#air_4">4</a> - <a href="#average_air">Ср.</a></p2>
+         <p2>Почва - графики</p2>
+         <p2><a href="#soil_1">1</a> - <a href="#soil_2">2</a> - <a href="#soil_3">3</a> - <a href="#soil_4">4</a> - <a href="#soil_5">5</a> - <a href="#soil_6">6</a> - <a href="#average_soil">Ср.</a></p2>
+         <div class="emergencyLine"></div>
+         <p2>Экстренное управление</p2>
+         <div id="emergencyModeSwitch">
+            <label class="switch">
+            <input type="checkbox" class="emergencyModeSwitch">
+            <span class="slider round"></span>
+            </label>
+         </div>
       </div>
       <div id="main">
          <div id="controlZone">
             <div id="set">
-               <h2>Задать параметр T</h2>
-               <button class="button" onclick="setParam('T', T, getElementById('T').value);">--</button>
-               <input type="number" id="T" min="-100" max="100" style="width:50px;">
+               <h2 id="currentT">Параметр T = 50</h2>
+               <button class="button" onclick="setParameter('T', getElementById('T').value);">Задать</button>
+               <input type="number" id="T" min="-100" max="100" value="50" style="width:50px;">
             </div>
-            
             <div id="set">
-               <h2>Задать параметр H</h2>
-               <button class="button" onclick="setParam('H', H, getElementById('H').value);">--</button>
-               <input type="number" id="H" min="-100" max="100" style="width:50px;">
+               <h2 id="currentH">Параметр H = 50</h2>
+               <button class="button" onclick="setParameter('H', getElementById('H').value);">Задать</button>
+               <input type="number" id="H" min="-100" max="100" value="50" style="width:50px;">
             </div>
-
             <div id="set">
-               <h2>Задать параметр Hb</h2>
-               <button class="button" onclick="setParam('Hb', Hb, getElementById('Hb').value);">--</button>
-               <input type="number" id="Hb" min="-100" max="100" style="width:50px;">
+               <h2 id="currentHb">Параметр Hb = 50</h2>
+               <button class="button" onclick="setParameter('Hb', getElementById('Hb').value);">Задать</button>
+               <input type="number" id="Hb" min="-100" max="100" value="50" style="width:50px;">
             </div>
             <br>
             <div id="set">
-            <h2>Управление форточками</h2>
-            <button class="button" onclick="patchRequest(url_forkDrive, 'fork_drive', 1, 0);">Открыть</button>
-            <button class="button" onclick="patchRequest(url_forkDrive, 'fork_drive', 0, 0);">Закрыть</button>
-         </div>
-         <div id="set">
-            <h2>Управление системой увлажнения</h2>
-            <button class="button" onclick="patchRequest(url_totalHum, 'total_hum', 1, 0);">Включить</button>
-            <button class="button" onclick="patchRequest(url_totalHum, 'total_hum', 0, 0);">Отключить</button>
-         </div>
-            <h2>Запуск полива грядок</h2>
-            <div id="btn-group">
-               <button class="button-Group" onclick="patchRequest(url_watering_open, 'watering', 1, 1);">1</button>
-               <button class="button-Group" onclick="patchRequest(url_watering_open, 'watering', 1, 2);">2</button>>2</button>
-               <button class="button-Group" onclick="patchRequest(url_watering_open, 'watering', 1, 3);">3</button>
-               <button class="button-Group" onclick="patchRequest(url_watering_open, 'watering', 1, 4);">4</button>
-               <button class="button-Group" onclick="patchRequest(url_watering_open, 'watering', 1, 5);">5</button>
-               <button class="button-Group" onclick="patchRequest(url_watering_open, 'watering', 1, 6);">6</button>
+               <h2 id="currentForkDrive">Форточки открыты</h2>
+               <button class="button" onclick="patchRequest(url_forkDrive, 'fork_drive', 1, 0);">Открыть</button>
+               <button class="button" onclick="patchRequest(url_forkDrive, 'fork_drive', 0, 0);">Закрыть</button>
             </div>
-            <h2>Прекращение полива грядок</h2>
-            <div id="btn-group">
-               <button class="button-Group" onclick="patchRequest(url_watering_close, 'watering', 0, 1);">1</button>
-               <button class="button-Group" onclick="patchRequest(url_watering_close, 'watering', 0, 2);">2</button>
-               <button class="button-Group" onclick="patchRequest(url_watering_close, 'watering', 0, 3);">3</button>
-               <button class="button-Group" onclick="patchRequest(url_watering_close, 'watering', 0, 4);">4</button>
-               <button class="button-Group" onclick="patchRequest(url_watering_close, 'watering', 0, 5);">5</button>
-               <button class="button-Group" onclick="patchRequest(url_watering_close, 'watering', 0, 6);">6</button>
+            <div id="set">
+               <h2 id="currentWatering">Общее увлажнение включено</h2>
+               <button class="button" onclick="patchRequest(url_totalHum, 'total_hum', 1, 0);">Включить</button>
+               <button class="button" onclick="patchRequest(url_totalHum, 'total_hum', 0, 0);">Отключить</button>
+            </div>
+            <h2>Полив грядок</h2>
+            <div id="soilWateringSwitch">
+               <label class="switch">
+               <input type="checkbox" class="soilWateringSwitch1">
+               <span class="slider round"></span>
+               </label>
+               <label class="switch">
+               <input type="checkbox" class="soilWateringSwitch2">
+               <span class="slider round"></span>
+               </label>
+               <label class="switch">
+               <input type="checkbox" class="soilWateringSwitch3">
+               <span class="slider round"></span>
+               </label>
+               <label class="switch">
+               <input type="checkbox" class="soilWateringSwitch4">
+               <span class="slider round"></span>
+               </label>
+               <label class="switch">
+               <input type="checkbox" class="soilWateringSwitch5">
+               <span class="slider round"></span>
+               </label>
+               <label class="switch">
+               <input type="checkbox" class="soilWateringSwitch6">
+               <span class="slider round"></span>
+               </label>
             </div>
          </div>
          <div id="sensorData">
-            <p>Датчик температуры и влажности воздуха 1<p>
+            <div id="table">
+               <table class="tg">
+                  <thead>
+                     <tr>
+                        <th class="tg-1" colspan="6">Сводная таблица показателей датчиков (последние 10 значений)</th>
+                     </tr>
+                  </thead>
+                  <tbody>
+                     <tr>
+                        <td class="tg-1" colspan="3">Датчики воздуха</td>
+                        <td class="tg-1" colspan="3">Датчики почвы</td>
+                     </tr>
+                     <tr>
+                        <td class="tg-1" rowspan="2">1</td>
+                        <td class="tg-1">Температура</td>
+                        <td class="tg-1" id="lastAirTemp1">1 2 3 4 5 6 7 8 9 10</td>
+                        <td class="tg-1">1</td>
+                        <td class="tg-3">Влажность</td>
+                        <td class="tg-3" id="lastSoilHum1">1 2 3 4 5 6 7 8 9 10</td>
+                     </tr>
+                     <tr>
+                        <td class="tg-1">Влажность</td>
+                        <td class="tg-1" id="lastAirHum1">1 2 3 4 5 6 7 8 9 10</td>
+                        <td class="tg-1">2</td>
+                        <td class="tg-3">Влажность</td>
+                        <td class="tg-3" id="lastSoilHum2">1 2 3 4 5 6 7 8 9 10</td>
+                     </tr>
+                     <tr>
+                        <td class="tg-1" rowspan="2">2</td>
+                        <td class="tg-1">Температура</td>
+                        <td class="tg-1" id="lastAirTemp2">1 2 3 4 5 6 7 8 9 10<br></td>
+                        <td class="tg-1">3</td>
+                        <td class="tg-3">Влажность</td>
+                        <td class="tg-3" id="lastSoilHum3">1 2 3 4 5 6 7 8 9 10</td>
+                     </tr>
+                     <tr>
+                        <td class="tg-1">Влажность</td>
+                        <td class="tg-1" id="lastAirHum2">1 2 3 4 5 6 7 8 9 10</td>
+                        <td class="tg-1">4</td>
+                        <td class="tg-3">Влажность</td>
+                        <td class="tg-3" id="lastSoilHum4">1 2 3 4 5 6 7 8 9 10</td>
+                     </tr>
+                     <tr>
+                        <td class="tg-1" rowspan="2">3</td>
+                        <td class="tg-1">Температура</td>
+                        <td class="tg-1" id="lastAirTemp3">1 2 3 4 5 6 7 8 9 10</td>
+                        <td class="tg-1">5</td>
+                        <td class="tg-3">Влажность</td>
+                        <td class="tg-3" id="lastSoilHum5">1 2 3 4 5 6 7 8 9 10</td>
+                     </tr>
+                     <tr>
+                        <td class="tg-1">Влажность</td>
+                        <td class="tg-1" id="lastAirHum3">1 2 3 4 5 6 7 8 9 10</td>
+                        <td class="tg-1">6</td>
+                        <td class="tg-3">Влажность</td>
+                        <td class="tg-3" id="lastSoilHum6">1 1 3 4 5 6 7 8 9 10</td>
+                     </tr>
+                     <tr>
+                        <td class="tg-1" rowspan="2">4</td>
+                        <td class="tg-1">Температура</td>
+                        <td class="tg-1" id="lastAirTemp4">1 2 3 4 5 6 7 8 9 10</td>
+                        <td class="tg-1" colspan="3" rowspan="2"><br></td>
+                     </tr>
+                     <tr>
+                        <td class="tg-1">Влажность</td>
+                        <td class="tg-1" id="lastAirHum4">1 2 3 4 5 6 7 8 9 10</td>
+                     </tr>
+                     <tr>
+                        <td class="tg-1" colspan="6">Средние значения</td>
+                     </tr>
+                     <tr>
+                        <td class="tg-1" colspan="2">Средняя температура воздуха</td>
+                        <td class="tg-2">Средняя влажность воздуха</td>
+                        <td class="tg-1" colspan="3">Средняя влажность бороздок почвы</td>
+                     </tr>
+                     <tr>
+                        <td class="tg-1" colspan="2" id="lastAverageAirTemp">1 2 3 4 5 6 7 8 9 10</td>
+                        <td class="tg-1" id="lastAverageAirHum">1 2 3 4 5 6 7 8 9 10</td>
+                        <td class="tg-1" colspan="3" id="lastAverageSoilHum">1 2 3 4 5 6 7 8 9 10<br>1 2 3 4 5 6 7 8 9 10<br>1 2 3 4 5 6 7 8 9 10<br>1 2 3 4 5 6 7 8 9 10<br>1 2 3 4 5 6 7 8 9 10<br>1 2 3 4 5 6 7 8 9 10</td>
+                     </tr>
+                  </tbody>
+               </table>
+            </div>
+            <p id="air_1">Датчик температуры и влажности воздуха 1
+            <p>
             <div id="chart_air_1"></div>
-            <p>Датчик температуры и влажности воздуха 2</p>
+            <p id="air_2">Датчик температуры и влажности воздуха 2</p>
             <div id="chart_air_2"></div>
-            <p>Датчик температуры и влажности воздуха 3</p>
+            <p id="air_3">Датчик температуры и влажности воздуха 3</p>
             <div id="chart_air_3"></div>
-            <p>Датчик температуры и влажности воздуха 4</p>
+            <p id="air_4">Датчик температуры и влажности воздуха 4</p>
             <div id="chart_air_4"></div>
-            <p>Датчик влажности почвы 1</p>
+            <p id="soil_1">Датчик влажности почвы 1</p>
             <div id="chart_soil_1"></div>
-            <p>Датчик влажности почвы 2</p>
+            <p id="soil_2">Датчик влажности почвы 2</p>
             <div id="chart_soil_2"></div>
-            <p>Датчик влажности почвы 3</p>
+            <p id="soil_3">Датчик влажности почвы 3</p>
             <div id="chart_soil_3"></div>
-            <p>Датчик влажности почвы 4</p>
+            <p id="soil_4">Датчик влажности почвы 4</p>
             <div id="chart_soil_4"></div>
-            <p>Датчик влажности почвы 5</p>
+            <p id="soil_5">Датчик влажности почвы 5</p>
             <div id="chart_soil_5"></div>
-            <p>Датчик влажности почвы 6</p>
+            <p id="soil_6">Датчик влажности почвы 6</p>
             <div id="chart_soil_6"></div>
+            <p id="average_air">Средняя температура и влажность воздуха</p>
+            <div id="chart_average_air"></div>
+            <p id="average_soil">Средняя влажность бороздок почвы</p>
+            <div id="chart_average_soil"></div>
             <script src="main.js"></script>
          </div>
       </div>
