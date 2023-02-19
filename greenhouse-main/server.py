@@ -3,22 +3,33 @@ import json
 from flask import *
 from flask_cors import CORS
 
-# сохраняю значения параметров, чтобы восстановить их при запуске
+HOST = '91.240.84.86'
+PORT = 5000
+
+
+# значения параметров и состояния систем теплицы
+
+# при открытии веб-интерфейса фронтенд делает запрос к /get-state,
+# чтобы восстановить состояние систем
+
+# при изменении состояния фронтенд отсылает новое в /save-state
+
 T = 50
 H = 50
 Hb = 50
 watering = 0
 fork_drive = 0
-soil_watering = [0, 0, 0, 0, 0, 0]
-emergencyMode = False
+soil_watering = "000000"
+emergencyMode = 1
 
 app = Flask(__name__)
 CORS(app)
 
 
-@app.route("/save-states")
+@app.route("/save-state")
 def saveOnServer():
-    """Сохраняет передаваемый параметр на сервере, возвращает его по запросу."""
+    """Сохраняет передаваемый параметр на сервере"""
+    """Пример URL: http://91.240.84.86:5000/save-state?parameter=T&state=244"""
     global T
     global H
     global Hb
@@ -28,35 +39,59 @@ def saveOnServer():
     global emergencyMode
     parameter = request.args.get("parameter")
     state = request.args.get("state")
-    if parameter == "T":
-        if state == "getData":
-            return jsonify({"T": T})
-        T = state
-    elif parameter == "H":
-        if state == "getData":
-            return jsonify({"H": H})
-        H = state
-    elif parameter == "Hb":
-        if state == "getData":
-            return jsonify({"Hb": Hb})
-        H = state
-    elif parameter == "watering":
-        if state == "getData":
-            return jsonify({"watering": watering})
-        watering = state
-    elif parameter == "fork_drive":
-        if state == "getData":
-            return jsonify({"fork_drive": fork_drive})
-        fork_drive = state
-    elif parameter == "soil_watering":
-        if state == "getData":
-            return jsonify({"soil_watering": soil_watering})
-        soil_watering = state
-    elif parameter == "emergencyMode":
-        if state == "getData":
-            return jsonify({"emergencyMode": emergencyMode})
-        emergencyMode = state
-    return jsonify({"msg": "state saved"})
+    match parameter:
+        case "T":
+            T = int(state)
+            return jsonify({"new T" : T})
+        case "H":
+            H = int(state)
+            return jsonify({"new H" : H})
+        case "Hb":
+            Hb = int(state)
+            return jsonify({"new Hb" : Hb})
+        case "watering":
+            watering = int(state)
+            return jsonify({"new watering" : watering})
+        case "fork_drive":
+            fork_drive = int(state)
+            return jsonify({"new fork_drive" : fork_drive})
+        case "soil_watering":
+            soil_watering = int(state)
+            return jsonify({"new soil_watering" : soil_watering})
+        case "emergencyMode":
+            emergencyMode = int(state)
+            return jsonify({"new emergencyMode" : emergencyMode})
+    return jsonify({"msg": "error"})
+
+
+@app.route("/get-state")
+def getFromServer():
+    """Передает состояние систем и параметров по запросу."""
+    """Пример URL: http://91.240.84.86:5000/get-state?parameter=fork_drive"""
+    global T
+    global H
+    global Hb
+    global watering
+    global fork_drive
+    global soil_watering
+    global emergencyMode
+    parameter = request.args.get("parameter")
+    match parameter:
+        case "T":
+            return jsonify({"T" : T})
+        case "H":
+            return jsonify({"H" : H})
+        case "Hb":
+            return jsonify({"Hb" : Hb})
+        case "watering":
+            return jsonify({"watering" : watering})
+        case "fork_drive":
+            return jsonify({"fork_drive" : fork_drive})
+        case "soil_watering":
+            return jsonify({"soil_watering" : soil_watering})
+        case "emergencyMode":
+            return jsonify({"emergencyMode" : emergencyMode})
+    return jsonify({"msg" : "error"})
 
 
 @app.route("/get")
@@ -92,4 +127,4 @@ def patch_request():
 
 
 if __name__ == "__main__":
-    app.run(debug=False, host="91.240.84.86", port=5000)
+    app.run(debug=False, host=HOST, port=PORT)
