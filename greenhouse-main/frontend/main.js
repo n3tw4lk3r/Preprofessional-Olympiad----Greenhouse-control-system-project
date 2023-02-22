@@ -10,7 +10,7 @@ let soil_hum = [null, null, null, null, null, null];
 let watering = null;
 let fork_drive = null;
 let soil_watering = [null, null, null, null, null, null];
-let emergencyMode = false;
+let emergencyMode = null;
 
 // параметры
 let T = null;
@@ -66,20 +66,90 @@ let url_watering_close = "http://91.240.84.86:5000/patch?target=watering&state=0
 let url_totalHum = "http://91.240.84.86:5000/patch?target=total_hum&state=";
 
 
-function switchTest() {
-    alert(document.getElementById('switch').value);
+function setInitialSystemStates() {
+    // получаем состояние систем и параметров с бэкенд-сервера
+    axios.get("http://91.240.84.86:5000/get-state?parameter=T")
+    .then(response => {
+        state = (JSON.stringify(response.data).split(":")[1]).split("}")[0]
+        T = Number(state);
+        document.getElementById("currentT").innerHTML = "Параметр T = " + T.toString();
+    })
+    axios.get("http://91.240.84.86:5000/get-state?parameter=H")
+    .then(response => {
+        state = (JSON.stringify(response.data).split(":")[1]).split("}")[0]
+        H = Number(state);
+        document.getElementById("currentH").innerHTML = "Параметр H = " + H.toString();
+    })
+    axios.get("http://91.240.84.86:5000/get-state?parameter=Hb")
+    .then(response => {
+        state = (JSON.stringify(response.data).split(":")[1]).split("}")[0]
+        Hb = Number(state);
+        document.getElementById("currentHb").innerHTML = "Параметр Hb = " + Hb.toString();
+    })
+    axios.get("http://91.240.84.86:5000/get-state?parameter=watering")
+    .then(response => {
+        state = (JSON.stringify(response.data).split(":")[1]).split("}")[0]
+        watering = Number(state);
+        if (watering == 1) {
+            document.getElementById("currentWatering").innerHTML = "Общее увлажнение включено";
+        }
+        else if (watering == 0) {
+            document.getElementById("currentWatering").innerHTML = "Общее увлажнение отключено";
+        }
+    })
+    axios.get("http://91.240.84.86:5000/get-state?parameter=fork_drive")
+    .then(response => {
+        state = (JSON.stringify(response.data).split(":")[1]).split("}")[0]
+        fork_drive = Number(state);
+        if (fork_drive == 1) {
+            document.getElementById("currentForkDrive").innerHTML = "Форточки открыты";
+        }
+        else if (watering == 0) {
+            document.getElementById("currentForkDrive").innerHTML = "Форточки закрыты";
+        }
+    })
+    axios.get("http://91.240.84.86:5000/get-state?parameter=soil_watering")
+    .then(response => {
+        state = (JSON.stringify(response.data).split(":")[1]).split("}")[0]
+        for (let i=0; i<6; i++) {
+            soil_watering[i] = Number(state[i]);
+            divId = "soilWateringSwitch" + (i+1).toString();
+            if (state[i] == 1) {
+                document.getElementById(divId).checked = true;
+            }
+            else if (state[i] == 0) {
+                document.getElementById(divId).checked = false;
+            }
+        }
+    })
+    axios.get("http://91.240.84.86:5000/get-state?parameter=emergencyMode")
+    .then(response => {
+        state = (JSON.stringify(response.data).split(":")[1]).split("}")[0]
+        emergencyMode = Number(state);
+        if (emergencyMode == 1) {
+            document.getElementById("emergencyModeOnOff").checked = true;
+        }
+        else if (emergencyMode == 0) {
+            document.getElementById("emergencyModeOnOff").checked = false;
+        }
+    })
 }
-
+setInitialSystemStates();
 function patchRequest(url, target, state, id) {
     // path-запрос к API организаторов
-    // на самом деле делает get-запрос к бэкенду, а бэкенд уже делает get
+    // на самом деле делает get-запрос к бэкенду, а бэкенд уже делает patch
     if (target == "watering") {
         axios.get(url+id.toString())
         .then(response => {
-            alert(JSON.stringify(response.data));
+            //alert(JSON.stringify(response.data));
         })
+        
     }
     else if (target == "fork_drive") {
+        axios.get("http://91.240.84.86:5000/save-state?parameter=fork_drive&state="+state.toString())
+        .then(response => {
+            //console.log(response);
+        })
         axios.get(url+state.toString())
         .then(response => {
             if (JSON.stringify(response.data).split(' ')[5] == 'open"}') {
@@ -91,6 +161,10 @@ function patchRequest(url, target, state, id) {
         })
     }
     else if (target == "total_hum") {
+        axios.get("http://91.240.84.86:5000/save-state?parameter=watering&state="+state.toString())
+        .then(response => {
+            //console.log(response.data);
+        })
         axios.get(url+state.toString())
         .then(response => {
             if (JSON.stringify(response.data).split(' ')[5] == 'start"}') {
@@ -103,20 +177,6 @@ function patchRequest(url, target, state, id) {
     }
 }
 
-function setParameter(parameter, data) {
-    if (parameter == "T") {
-        T = data;
-        document.getElementById("currentT").innerHTML = "Параметр T = " + T.toString();
-    }
-    else if (parameter == "H") {
-        H = data;
-        document.getElementById("currentH").innerHTML = "Параметр H = " + H.toString();
-    }
-    else {
-        Hb = data;
-        document.getElementById("currentHb").innerHTML = "Параметр Hb = " + Hb.toString();
-    }
-}
 
 function getSensorData() {
     // функция была вызвана ещё раз (учитываем при подсчёте средней влажности)
@@ -136,9 +196,24 @@ function getSensorData() {
     }
 
     average_air_temp = ((air_temp[0] + air_temp[1] + air_temp[2] + air_temp[3]) / 4).toFixed(2);
+    if (average_air_temp > T || emergencyMode == 1) {
+        document.getElementById("forkDriveOn").disabled = false;
+    }
+    else if (average_air_temp < T) {
+        document.getElementById("forkDriveOn").disabled = true;
+    }
+
     queue_lastAverageAirTemp.push(average_air_temp);
     queue_lastAverageAirTemp.shift();
+
     average_air_hum = ((air_hum[0] + air_hum[1] + air_hum[2] + air_hum[3]) / 4).toFixed(2);
+    if (average_air_hum < H || emergencyMode == 1) {
+        document.getElementById("wateringOn").disabled = false;
+    }
+    else if (average_air_hum > H) {
+        document.getElementById("wateringOn").disabled = true;
+    }
+    
     queue_lastAverageAirHum.push(average_air_hum);
     queue_lastAverageAirHum.shift();
 
@@ -149,7 +224,15 @@ function getSensorData() {
                 queue_lastSoilHum[soil_sensor_id].push(response.data.humidity);
                 queue_lastSoilHum[soil_sensor_id].shift();
                 soil_hum_total[soil_sensor_id] += response.data.humidity;
+
                 soil_hum_average[soil_sensor_id] = (soil_hum_total[soil_sensor_id] / count).toFixed(2);
+                if (soil_hum_average[soil_sensor_id] < Hb || emergencyMode == 1) {
+                    document.getElementById("soilWateringSwitch" + (soil_sensor_id+1).toString()).disabled = false;
+                }
+                else if (soil_hum_average[soil_sensor_id] > Hb && emergencyMode == 0) {
+                    document.getElementById("soilWateringSwitch" + (soil_sensor_id+1).toString()).disabled = true;
+                }
+
                 queue_lastAverageSoilHum[soil_sensor_id].push(soil_hum_average[soil_sensor_id]);
                 queue_lastAverageSoilHum[soil_sensor_id].shift();
             })
@@ -163,7 +246,25 @@ function createChart_soil(divId, data_hum) {
         type: 'line'
     }]);
 }
+function setParameter(parameter, data) {
+    if (parameter == "T") {
+        T = data;
+        document.getElementById("currentT").innerHTML = "Параметр T = " + T.toString();
+        axios.get("http://91.240.84.86:5000/save-state?parameter=T&state="+T)
+    }
+    else if (parameter == "H") {
+        H = data;
+        document.getElementById("currentH").innerHTML = "Параметр H = " + H.toString();
+        axios.get("http://91.240.84.86:5000/save-state?parameter=H&state="+H);
+        
+    }
+    else {
+        Hb = data;
+        document.getElementById("currentHb").innerHTML = "Параметр Hb = " + Hb.toString();
+        axios.get("http://91.240.84.86:5000/save-state?parameter=Hb&state="+Hb);
 
+    }
+}
 function createChart_air(divId, data_hum, data_temp) {
     Plotly.plot(divId,
         [{
@@ -199,9 +300,7 @@ function updateChart_air(divId, data_hum, data_temp) {
     }, [0, 1]);
 }
 
-// получаем первые данные с датчиков
-getSensorData();
-// регулярно запрашиваем новые
+
 setInterval(async () => {
     getSensorData()
 }, 1000);
@@ -315,19 +414,23 @@ setInterval(function() {
 }, 1000);
 
 document.querySelector(".emergencyModeSwitch").addEventListener("change", function(){
-    emergencyMode = emergencyMode ? false : true;
-    
+    emergencyMode = emergencyMode ? 0 : 1;
+    axios.get("http://91.240.84.86:5000/save-state?parameter=emergencyMode&state="+emergencyMode.toString())
 })
 
 for (let i=0; i<6; i++) {
-    classId = ".soilWateringSwitch" + (i+1).toString();
-    document.querySelector(classId).addEventListener("change", function(){
+    divId = "soilWateringSwitch" + (i+1).toString();
+    document.getElementById(divId).addEventListener("change", function(){
         soil_watering[i] = soil_watering[i] ? false : true;
-        if (soil_watering[i]) {
+        if (soil_watering[i] == 1) {
             patchRequest(url_watering_open, 'watering', 1, i+1);
+            axios.get("http://91.240.84.86:5000/save-state?parameter=soil_watering&state="+soil_watering)
         }
-        else {
+        else if (soil_watering[i] == 0) {
             patchRequest(url_watering_close, 'watering', 1, i+1);
+            axios.get("http://91.240.84.86:5000/save-state?parameter=soil_watering&state="+soil_watering)
         }
     })
 }
+
+
