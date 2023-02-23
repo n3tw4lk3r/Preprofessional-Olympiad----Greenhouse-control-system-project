@@ -1,5 +1,7 @@
 import requests
 import json
+import csv
+import mysql.connector
 from flask import *
 from flask_cors import CORS
 
@@ -14,17 +16,16 @@ PORT = 5000
 
 # при изменении состояния фронтенд отсылает новое в /save-state
 
-T = 50
-H = 50
-Hb = 50
+T = 30
+H = 30
+Hb = 30
 watering = 0
 fork_drive = 0
 soil_watering = "000000"
-emergencyMode = 1
+emergencyMode = 0
 
 app = Flask(__name__)
 CORS(app)
-
 
 @app.route("/save-state")
 def saveOnServer():
@@ -39,30 +40,28 @@ def saveOnServer():
     global emergencyMode
     parameter = request.args.get("parameter")
     state = request.args.get("state")
-    match parameter:
-        case "T":
-            T = int(state)
-            return jsonify({"new T" : T})
-        case "H":
-            H = int(state)
-            return jsonify({"new H" : H})
-        case "Hb":
-            Hb = int(state)
-            return jsonify({"new Hb" : Hb})
-        case "watering":
-            watering = int(state)
-            return jsonify({"new watering" : watering})
-        case "fork_drive":
-            fork_drive = int(state)
-            return jsonify({"new fork_drive" : fork_drive})
-        case "soil_watering":
-            soil_watering = int(state)
-            return jsonify({"new soil_watering" : soil_watering})
-        case "emergencyMode":
-            emergencyMode = int(state)
-            return jsonify({"new emergencyMode" : emergencyMode})
+    if parameter == "T":
+        T = int(state)
+        return jsonify({"new T" : T})
+    elif parameter == "H":
+        H = int(state)
+        return jsonify({"new H" : H})
+    elif parameter == "Hb":
+        Hb = int(state)
+        return jsonify({"new Hb" : Hb})
+    elif parameter == "watering":
+        watering = int(state)
+        return jsonify({"new watering" : watering})
+    elif parameter == "fork_drive":
+        fork_drive = int(state)
+        return jsonify({"new fork_drive" : fork_drive})
+    elif parameter == "soil_watering":
+        soil_watering = int(state)
+        return jsonify({"new soil_watering" : soil_watering})
+    elif parameter == "emergencyMode":
+        emergencyMode = int(state)
+        return jsonify({"new emergencyMode" : emergencyMode})
     return jsonify({"msg": "error"})
-
 
 @app.route("/get-state")
 def getFromServer():
@@ -76,21 +75,20 @@ def getFromServer():
     global soil_watering
     global emergencyMode
     parameter = request.args.get("parameter")
-    match parameter:
-        case "T":
-            return jsonify({"T" : T})
-        case "H":
-            return jsonify({"H" : H})
-        case "Hb":
-            return jsonify({"Hb" : Hb})
-        case "watering":
-            return jsonify({"watering" : watering})
-        case "fork_drive":
-            return jsonify({"fork_drive" : fork_drive})
-        case "soil_watering":
-            return jsonify({"soil_watering" : soil_watering})
-        case "emergencyMode":
-            return jsonify({"emergencyMode" : emergencyMode})
+    if parameter == "T":
+        return jsonify({"T" : T})
+    elif parameter == "H":
+        return jsonify({"H" : H})
+    elif parameter == "Hb":
+        return jsonify({"Hb" : Hb})
+    elif parameter == "watering":
+        return jsonify({"watering" : watering})
+    elif parameter == "fork_drive":
+        return jsonify({"fork_drive" : fork_drive})
+    elif parameter == "soil_watering":
+        return jsonify({"soil_watering" : soil_watering})
+    elif parameter == "emergencyMode":
+        return jsonify({"emergencyMode" : emergencyMode})
     return jsonify({"msg" : "error"})
 
 
@@ -125,6 +123,35 @@ def patch_request():
     result = json.loads(result.text)
     return jsonify(result)
 
+
+@app.route("/exportDB")
+def exportDB():
+    """Экспорт БД в два csv файла."""
+
+    connection = mysql.connector.connect(user="olyacodzel", password="r2W89t",
+                                database="sensordata", host="91.240.84.86")
+    cursor = connection.cursor()
+    file = open("sensordata.csv", "w")
+
+    queryHum = "SELECT * FROM hum;"
+    queryTemp_hum = "SELECT * FROM temp_hum;"
+
+    cursor.execute(queryHum)
+    csv_writer = csv.writer(file)
+    csv_writer.writerow(['Датчики почвы'])
+    csv_writer.writerow(['id', 'humidity', 'time'])
+    for element in cursor:
+        csv_writer.writerow(element)
+    cursor.execute(queryTemp_hum)
+    csv_writer.writerow(['Датчики воздуха'])
+    csv_writer.writerow(['id', 'temperature', 'humidity', 'time'])
+    for element in cursor:
+        csv_writer.writerow(element)
+        
+    cursor.close()
+    connection.close()
+    file.close()
+    return send_file("sensordata.csv", as_attachment=True)
 
 if __name__ == "__main__":
     app.run(debug=False, host=HOST, port=PORT)
