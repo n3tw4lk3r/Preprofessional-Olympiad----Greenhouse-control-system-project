@@ -1,5 +1,5 @@
 // Не забыть добавить токен в заголовок всех запросов
-// axios.defaults.headers.common["X-Auth-Token"] = "<token>"
+axios.defaults.headers.common["X-Auth-Token"] = "hBE8lk"
 
 // данные с датчиков
 let air_temp = [null, null, null, null];
@@ -140,16 +140,10 @@ function patchRequest(url, target, state, id) {
     // на самом деле делает get-запрос к бэкенду, а бэкенд уже делает patch
     if (target == "watering") {
         axios.get(url+id.toString())
-        .then(response => {
-            //alert(JSON.stringify(response.data));
-        })
         
     }
     else if (target == "fork_drive") {
         axios.get("http://91.240.84.86:5000/save-state?parameter=fork_drive&state="+state.toString())
-        .then(response => {
-            //console.log(response);
-        })
         axios.get(url+state.toString())
         .then(response => {
             if (JSON.stringify(response.data).split(' ')[5] == 'open"}') {
@@ -162,9 +156,6 @@ function patchRequest(url, target, state, id) {
     }
     else if (target == "total_hum") {
         axios.get("http://91.240.84.86:5000/save-state?parameter=watering&state="+state.toString())
-        .then(response => {
-            //console.log(response.data);
-        })
         axios.get(url+state.toString())
         .then(response => {
             if (JSON.stringify(response.data).split(' ')[5] == 'start"}') {
@@ -300,6 +291,22 @@ function updateChart_air(divId, data_hum, data_temp) {
     }, [0, 1]);
 }
 
+function serveCSV() {
+    axios({
+        url: 'http://91.240.84.86:5000/exportDB',
+        method: 'GET',
+        responseType: 'blob',
+    }).then((response) => {
+        const href = URL.createObjectURL(response.data);
+        const link = document.createElement('a');
+        link.href = href;
+        link.setAttribute('download', 'sensordata.csv');
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(href);
+    });
+}
 
 setInterval(async () => {
     getSensorData()
