@@ -20,7 +20,7 @@
          <p2>Экстренное управление</p2>
          <div id="emergencyModeSwitch">
             <label class="switch">
-            <input type="checkbox" class="emergencyModeSwitch">
+            <input id="emergencyModeOnOff" type="checkbox" class="emergencyModeSwitch">
             <span class="slider round"></span>
             </label>
          </div>
@@ -28,57 +28,62 @@
       <div id="main">
          <div id="controlZone">
             <div id="set">
-               <h2 id="currentT">Параметр T = 50</h2>
+               <h2 id="currentT">Параметр T = 30</h2>
                <button class="button" onclick="setParameter('T', getElementById('T').value);">Задать</button>
                <input type="number" id="T" min="-100" max="100" value="50" style="width:50px;">
             </div>
             <div id="set">
-               <h2 id="currentH">Параметр H = 50</h2>
+               <h2 id="currentH">Параметр H = 30</h2>
                <button class="button" onclick="setParameter('H', getElementById('H').value);">Задать</button>
                <input type="number" id="H" min="-100" max="100" value="50" style="width:50px;">
             </div>
             <div id="set">
-               <h2 id="currentHb">Параметр Hb = 50</h2>
+               <h2 id="currentHb">Параметр Hb = 30</h2>
                <button class="button" onclick="setParameter('Hb', getElementById('Hb').value);">Задать</button>
                <input type="number" id="Hb" min="-100" max="100" value="50" style="width:50px;">
             </div>
             <br>
             <div id="set">
-               <h2 id="currentForkDrive">Форточки открыты</h2>
-               <button class="button" onclick="patchRequest(url_forkDrive, 'fork_drive', 1, 0);">Открыть</button>
+               <h2 id="currentForkDrive">Форточки закрыты</h2>
+               <button id="forkDriveOn" class="button" onclick="patchRequest(url_forkDrive, 'fork_drive', 1, 0);">Открыть</button>
                <button class="button" onclick="patchRequest(url_forkDrive, 'fork_drive', 0, 0);">Закрыть</button>
             </div>
             <div id="set">
-               <h2 id="currentWatering">Общее увлажнение включено</h2>
-               <button class="button" onclick="patchRequest(url_totalHum, 'total_hum', 1, 0);">Включить</button>
+               <h2 id="currentWatering">Общее увлажнение отключено</h2>
+               <button id="wateringOn" class="button" onclick="patchRequest(url_totalHum, 'total_hum', 1, 0);">Включить</button>
                <button class="button" onclick="patchRequest(url_totalHum, 'total_hum', 0, 0);">Отключить</button>
             </div>
+            
             <h2>Полив грядок</h2>
             <div id="soilWateringSwitch">
-               <label class="switch">
-               <input type="checkbox" class="soilWateringSwitch1">
-               <span class="slider round"></span>
-               </label>
-               <label class="switch">
-               <input type="checkbox" class="soilWateringSwitch2">
-               <span class="slider round"></span>
-               </label>
-               <label class="switch">
-               <input type="checkbox" class="soilWateringSwitch3">
-               <span class="slider round"></span>
-               </label>
-               <label class="switch">
-               <input type="checkbox" class="soilWateringSwitch4">
-               <span class="slider round"></span>
-               </label>
-               <label class="switch">
-               <input type="checkbox" class="soilWateringSwitch5">
-               <span class="slider round"></span>
-               </label>
-               <label class="switch">
-               <input type="checkbox" class="soilWateringSwitch6">
-               <span class="slider round"></span>
-               </label>
+               <label class="container">1
+                  <input type="checkbox"  id="soilWateringSwitch1">
+                  <span class="checkmark"></span>
+                </label>
+                <label class="container">2
+                  <input type="checkbox" id="soilWateringSwitch2">
+                  <span class="checkmark"></span>
+                </label>
+                <label class="container">3
+                  <input type="checkbox" id="soilWateringSwitch3">
+                  <span class="checkmark"></span>
+                </label>
+                <label class="container">4
+                  <input type="checkbox" id="soilWateringSwitch4">
+                  <span class="checkmark"></span>
+                </label>
+                <label class="container">5
+                  <input type="checkbox" id="soilWateringSwitch5">
+                  <span class="checkmark"></span>
+                </label>
+                <label class="container">6
+                  <input type="checkbox" id="soilWateringSwitch6">
+                  <span class="checkmark"></span>
+                </label>
+            </div>
+            <br>
+            <div id="set">
+               <button id="exportDB" class="button" onclick="serveCSV()">Выгрузка БД</button>
             </div>
          </div>
          <div id="sensorData">
