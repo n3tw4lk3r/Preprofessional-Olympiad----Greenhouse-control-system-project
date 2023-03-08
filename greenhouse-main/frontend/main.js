@@ -1,6 +1,3 @@
-// Не забыть добавить токен в заголовок всех запросов
-axios.defaults.headers.common["X-Auth-Token"] = "hBE8lk"
-
 // данные с датчиков
 let air_temp = [null, null, null, null];
 let air_hum = [null, null, null, null];
@@ -69,102 +66,99 @@ let url_totalHum = "http://91.240.84.86:5000/patch?target=total_hum&state=";
 function setInitialSystemStates() {
     // получаем состояние систем и параметров с бэкенд-сервера
     axios.get("http://91.240.84.86:5000/get-state?parameter=T")
-    .then(response => {
-        state = (JSON.stringify(response.data).split(":")[1]).split("}")[0]
-        T = Number(state);
-        document.getElementById("currentT").innerHTML = "Параметр T = " + T.toString();
-    })
+        .then(response => {
+            state = (JSON.stringify(response.data).split(":")[1]).split("}")[0]
+            T = Number(state);
+            document.getElementById("currentT").innerHTML = "Параметр T = " + T.toString();
+        })
     axios.get("http://91.240.84.86:5000/get-state?parameter=H")
-    .then(response => {
-        state = (JSON.stringify(response.data).split(":")[1]).split("}")[0]
-        H = Number(state);
-        document.getElementById("currentH").innerHTML = "Параметр H = " + H.toString();
-    })
+        .then(response => {
+            state = (JSON.stringify(response.data).split(":")[1]).split("}")[0]
+            H = Number(state);
+            document.getElementById("currentH").innerHTML = "Параметр H = " + H.toString();
+        })
     axios.get("http://91.240.84.86:5000/get-state?parameter=Hb")
-    .then(response => {
-        state = (JSON.stringify(response.data).split(":")[1]).split("}")[0]
-        Hb = Number(state);
-        document.getElementById("currentHb").innerHTML = "Параметр Hb = " + Hb.toString();
-    })
+        .then(response => {
+            state = (JSON.stringify(response.data).split(":")[1]).split("}")[0]
+            Hb = Number(state);
+            document.getElementById("currentHb").innerHTML = "Параметр Hb = " + Hb.toString();
+        })
     axios.get("http://91.240.84.86:5000/get-state?parameter=watering")
-    .then(response => {
-        state = (JSON.stringify(response.data).split(":")[1]).split("}")[0]
-        watering = Number(state);
-        if (watering == 1) {
-            document.getElementById("currentWatering").innerHTML = "Общее увлажнение включено";
-        }
-        else if (watering == 0) {
-            document.getElementById("currentWatering").innerHTML = "Общее увлажнение отключено";
-        }
-    })
+        .then(response => {
+            state = (JSON.stringify(response.data).split(":")[1]).split("}")[0]
+            watering = Number(state);
+            if (watering == 1) {
+                document.getElementById("currentWatering").innerHTML = "Общее увлажнение включено";
+            } else if (watering == 0) {
+                document.getElementById("currentWatering").innerHTML = "Общее увлажнение отключено";
+            }
+        })
     axios.get("http://91.240.84.86:5000/get-state?parameter=fork_drive")
-    .then(response => {
-        state = (JSON.stringify(response.data).split(":")[1]).split("}")[0]
-        fork_drive = Number(state);
-        if (fork_drive == 1) {
-            document.getElementById("currentForkDrive").innerHTML = "Форточки открыты";
-        }
-        else if (watering == 0) {
-            document.getElementById("currentForkDrive").innerHTML = "Форточки закрыты";
-        }
-    })
+        .then(response => {
+            state = (JSON.stringify(response.data).split(":")[1]).split("}")[0]
+            fork_drive = Number(state);
+            if (fork_drive == 1) {
+                document.getElementById("currentForkDrive").innerHTML = "Форточки открыты";
+            } else if (watering == 0) {
+                document.getElementById("currentForkDrive").innerHTML = "Форточки закрыты";
+            }
+        })
     axios.get("http://91.240.84.86:5000/get-state?parameter=soil_watering")
-    .then(response => {
-        state = (JSON.stringify(response.data).split(":")[1]).split("}")[0]
-        for (let i=0; i<6; i++) {
-            soil_watering[i] = Number(state[i]);
-            divId = "soilWateringSwitch" + (i+1).toString();
-            if (state[i] == 1) {
-                document.getElementById(divId).checked = true;
+        .then(response => {
+            state = (JSON.stringify(response.data).split(":")[1]).split("}")[0];
+            state = state.slice(1, 7);
+            console.log(state);
+
+            for (let i = 0; i < 6; i++) {
+                soil_watering[i] = state[i].toString();
+                console.log(state[i]);
+                divId = "soilWateringSwitch" + (i + 1);
+                if (state[i] == '1') {
+                    document.getElementById(divId).checked = true;
+                } else if (state[i] == '0') {
+                    document.getElementById(divId).checked = false;
+                }
             }
-            else if (state[i] == 0) {
-                document.getElementById(divId).checked = false;
-            }
-        }
-    })
+            //console.log(soil_watering.join(''));
+        })
     axios.get("http://91.240.84.86:5000/get-state?parameter=emergencyMode")
-    .then(response => {
-        state = (JSON.stringify(response.data).split(":")[1]).split("}")[0]
-        emergencyMode = Number(state);
-        if (emergencyMode == 1) {
-            document.getElementById("emergencyModeOnOff").checked = true;
-        }
-        else if (emergencyMode == 0) {
-            document.getElementById("emergencyModeOnOff").checked = false;
-        }
-    })
+        .then(response => {
+            state = (JSON.stringify(response.data).split(":")[1]).split("}")[0]
+            emergencyMode = Number(state);
+            if (emergencyMode == 1) {
+                document.getElementById("emergencyModeOnOff").checked = true;
+            } else if (emergencyMode == 0) {
+                document.getElementById("emergencyModeOnOff").checked = false;
+            }
+        })
 }
-setInitialSystemStates();
+
 function patchRequest(url, target, state, id) {
     // path-запрос к API организаторов
     // на самом деле делает get-запрос к бэкенду, а бэкенд уже делает patch
     if (target == "watering") {
-        axios.get(url+id.toString())
-        
-    }
-    else if (target == "fork_drive") {
-        axios.get("http://91.240.84.86:5000/save-state?parameter=fork_drive&state="+state.toString())
-        axios.get(url+state.toString())
-        .then(response => {
-            if (JSON.stringify(response.data).split(' ')[5] == 'open"}') {
-                document.getElementById("currentForkDrive").innerHTML = "Форточки открыты";
-            }
-            else {
-                document.getElementById("currentForkDrive").innerHTML = "Форточки закрыты";
-            }
-        })
-    }
-    else if (target == "total_hum") {
-        axios.get("http://91.240.84.86:5000/save-state?parameter=watering&state="+state.toString())
-        axios.get(url+state.toString())
-        .then(response => {
-            if (JSON.stringify(response.data).split(' ')[5] == 'start"}') {
-                document.getElementById("currentWatering").innerHTML = "Общее увлажнение включено";
-            }
-            else {
-                document.getElementById("currentWatering").innerHTML = "Общее увлажнение отключено";
-            }
-        })
+        axios.get(url + id.toString())
+
+    } else if (target == "fork_drive") {
+        axios.get("http://91.240.84.86:5000/save-state?parameter=fork_drive&state=" + state.toString())
+        axios.get(url + state.toString())
+            .then(response => {
+                if (JSON.stringify(response.data).split(' ')[5] == 'open"}') {
+                    document.getElementById("currentForkDrive").innerHTML = "Форточки открыты";
+                } else {
+                    document.getElementById("currentForkDrive").innerHTML = "Форточки закрыты";
+                }
+            })
+    } else if (target == "total_hum") {
+        axios.get("http://91.240.84.86:5000/save-state?parameter=watering&state=" + state.toString())
+        axios.get(url + state.toString())
+            .then(response => {
+                if (JSON.stringify(response.data).split(' ')[5] == 'start"}') {
+                    document.getElementById("currentWatering").innerHTML = "Общее увлажнение включено";
+                } else {
+                    document.getElementById("currentWatering").innerHTML = "Общее увлажнение отключено";
+                }
+            })
     }
 }
 
@@ -182,15 +176,14 @@ function getSensorData() {
                 air_hum[air_sensor_id] = response.data.humidity;
                 queue_lastAirHum[air_sensor_id].push(response.data.humidity);
                 queue_lastAirHum[air_sensor_id].shift();
-                
+
             })
     }
 
     average_air_temp = ((air_temp[0] + air_temp[1] + air_temp[2] + air_temp[3]) / 4).toFixed(2);
     if (average_air_temp > T || emergencyMode == 1) {
         document.getElementById("forkDriveOn").disabled = false;
-    }
-    else if (average_air_temp < T) {
+    } else if (average_air_temp < T) {
         document.getElementById("forkDriveOn").disabled = true;
     }
 
@@ -200,11 +193,10 @@ function getSensorData() {
     average_air_hum = ((air_hum[0] + air_hum[1] + air_hum[2] + air_hum[3]) / 4).toFixed(2);
     if (average_air_hum < H || emergencyMode == 1) {
         document.getElementById("wateringOn").disabled = false;
-    }
-    else if (average_air_hum > H) {
+    } else if (average_air_hum > H) {
         document.getElementById("wateringOn").disabled = true;
     }
-    
+
     queue_lastAverageAirHum.push(average_air_hum);
     queue_lastAverageAirHum.shift();
 
@@ -218,10 +210,9 @@ function getSensorData() {
 
                 soil_hum_average[soil_sensor_id] = (soil_hum_total[soil_sensor_id] / count).toFixed(2);
                 if (soil_hum_average[soil_sensor_id] < Hb || emergencyMode == 1) {
-                    document.getElementById("soilWateringSwitch" + (soil_sensor_id+1).toString()).disabled = false;
-                }
-                else if (soil_hum_average[soil_sensor_id] > Hb && emergencyMode == 0) {
-                    document.getElementById("soilWateringSwitch" + (soil_sensor_id+1).toString()).disabled = true;
+                    document.getElementById("soilWateringSwitch" + (soil_sensor_id + 1).toString()).disabled = false;
+                } else if (soil_hum_average[soil_sensor_id] > Hb && emergencyMode == 0) {
+                    document.getElementById("soilWateringSwitch" + (soil_sensor_id + 1).toString()).disabled = true;
                 }
 
                 queue_lastAverageSoilHum[soil_sensor_id].push(soil_hum_average[soil_sensor_id]);
@@ -237,25 +228,25 @@ function createChart_soil(divId, data_hum) {
         type: 'line'
     }]);
 }
+
 function setParameter(parameter, data) {
     if (parameter == "T") {
         T = data;
         document.getElementById("currentT").innerHTML = "Параметр T = " + T.toString();
-        axios.get("http://91.240.84.86:5000/save-state?parameter=T&state="+T)
-    }
-    else if (parameter == "H") {
+        axios.get("http://91.240.84.86:5000/save-state?parameter=T&state=" + T)
+    } else if (parameter == "H") {
         H = data;
         document.getElementById("currentH").innerHTML = "Параметр H = " + H.toString();
-        axios.get("http://91.240.84.86:5000/save-state?parameter=H&state="+H);
-        
-    }
-    else {
+        axios.get("http://91.240.84.86:5000/save-state?parameter=H&state=" + H);
+
+    } else {
         Hb = data;
         document.getElementById("currentHb").innerHTML = "Параметр Hb = " + Hb.toString();
-        axios.get("http://91.240.84.86:5000/save-state?parameter=Hb&state="+Hb);
+        axios.get("http://91.240.84.86:5000/save-state?parameter=Hb&state=" + Hb);
 
     }
 }
+
 function createChart_air(divId, data_hum, data_temp) {
     Plotly.plot(divId,
         [{
@@ -308,15 +299,13 @@ function serveCSV() {
     });
 }
 
-setInterval(async () => {
-    getSensorData()
-}, 1000);
+
 
 // создаём графики
 for (let soil_sensor_id = 0; soil_sensor_id < 6; soil_sensor_id++) {
     createChart_soil('chart_soil_' + (soil_sensor_id + 1).toString(),
         soil_hum[soil_sensor_id]
-);
+    );
 }
 for (let air_sensor_id = 0; air_sensor_id < 4; air_sensor_id++) {
     createChart_air('chart_air_' + (air_sensor_id + 1).toString(),
@@ -325,40 +314,46 @@ for (let air_sensor_id = 0; air_sensor_id < 4; air_sensor_id++) {
 }
 Plotly.plot('chart_average_soil',
     [{
-        y: [queue_lastAverageSoilHum[0][-1]],
-        type: 'line',
-        name: "Бороздка 1",
-    },
-    {
-        y: [queue_lastAverageSoilHum[1][-1]],
-        type: 'line',
-        name: "Бороздка 2",
-    },
-    {
-        y: [queue_lastAverageSoilHum[2][-1]],
-        type: 'line',
-        name: "Бороздка 3",
-    },
-    {
-        y: [queue_lastAverageSoilHum[3][-1]],
-        type: 'line',
-        name: "Бороздка 4",
-    },
-    {
-        y: [queue_lastAverageSoilHum[4][-1]],
-        type: 'line',
-        name: "Бороздка 5",
-    },
-    {
-        y: [queue_lastAverageSoilHum[5][-1]],
-        type: 'line',
-        name: "Бороздка 6",
-    }
+            y: [queue_lastAverageSoilHum[0][-1]],
+            type: 'line',
+            name: "Бороздка 1",
+        },
+        {
+            y: [queue_lastAverageSoilHum[1][-1]],
+            type: 'line',
+            name: "Бороздка 2",
+        },
+        {
+            y: [queue_lastAverageSoilHum[2][-1]],
+            type: 'line',
+            name: "Бороздка 3",
+        },
+        {
+            y: [queue_lastAverageSoilHum[3][-1]],
+            type: 'line',
+            name: "Бороздка 4",
+        },
+        {
+            y: [queue_lastAverageSoilHum[4][-1]],
+            type: 'line',
+            name: "Бороздка 5",
+        },
+        {
+            y: [queue_lastAverageSoilHum[5][-1]],
+            type: 'line',
+            name: "Бороздка 6",
+        }
     ],
 );
 createChart_air('chart_average_air',
-        queue_lastAverageAirHum[-1], queue_lastAverageAirTemp[-1]
-    );
+    queue_lastAverageAirHum[-1], queue_lastAverageAirTemp[-1]
+);
+
+setInitialSystemStates();
+
+setInterval(async () => {
+    getSensorData()
+}, 1000);
 
 // обновляем графики и таблицу с учётом новых данных каждые N секунд
 for (let soil_sensor_id = 0; soil_sensor_id < 6; soil_sensor_id++) {
@@ -374,12 +369,15 @@ for (let soil_sensor_id = 0; soil_sensor_id < 6; soil_sensor_id++) {
     }, 1000);
 }
 for (let air_sensor_id = 0; air_sensor_id < 4; air_sensor_id++) {
-    let idChart= 'chart_air_' + (air_sensor_id + 1).toString();
+    let idChart = 'chart_air_' + (air_sensor_id + 1).toString();
     let idTableTemp = 'lastAirTemp' + (air_sensor_id + 1).toString();
     let idTableHum = 'lastAirHum' + (air_sensor_id + 1).toString();
     setInterval(function() {
         Plotly.extendTraces(idChart, {
-            y: [[air_hum[air_sensor_id]], [air_temp[air_sensor_id]]]
+            y: [
+                [air_hum[air_sensor_id]],
+                [air_temp[air_sensor_id]]
+            ]
         }, [0, 1]);
         document.getElementById(idTableTemp).innerHTML = queue_lastAirTemp[air_sensor_id].join(' ');
         document.getElementById(idTableHum).innerHTML = queue_lastAirHum[air_sensor_id].join(' ');
@@ -390,7 +388,7 @@ for (let air_sensor_id = 0; air_sensor_id < 4; air_sensor_id++) {
 
 setInterval(function() {
     let data = '';
-    for (let i=0; i<6; i++) {
+    for (let i = 0; i < 6; i++) {
         data = data + queue_lastAverageSoilHum[i].join(' ') + "<br>";
     }
     document.getElementById('lastAverageSoilHum').innerHTML = data;
@@ -420,24 +418,74 @@ setInterval(function() {
     }, [0, 1, 2, 3, 4, 5]);
 }, 1000);
 
-document.querySelector(".emergencyModeSwitch").addEventListener("change", function(){
+document.querySelector(".emergencyModeSwitch").addEventListener("change", function() {
     emergencyMode = emergencyMode ? 0 : 1;
-    axios.get("http://91.240.84.86:5000/save-state?parameter=emergencyMode&state="+emergencyMode.toString())
+    axios.get("http://91.240.84.86:5000/save-state?parameter=emergencyMode&state=" + emergencyMode.toString())
 })
 
-for (let i=0; i<6; i++) {
-    divId = "soilWateringSwitch" + (i+1).toString();
-    document.getElementById(divId).addEventListener("change", function(){
-        soil_watering[i] = soil_watering[i] ? false : true;
-        if (soil_watering[i] == 1) {
-            patchRequest(url_watering_open, 'watering', 1, i+1);
-            axios.get("http://91.240.84.86:5000/save-state?parameter=soil_watering&state="+soil_watering)
-        }
-        else if (soil_watering[i] == 0) {
-            patchRequest(url_watering_close, 'watering', 1, i+1);
-            axios.get("http://91.240.84.86:5000/save-state?parameter=soil_watering&state="+soil_watering)
-        }
-    })
-}
+// почему-то если пытаться переписать код ниже циклом, он перестает работать
+document.getElementById('soilWateringSwitch1').addEventListener("change", function() {
+    soil_watering[0] = (Number(document.getElementById('soilWateringSwitch1').checked)).toString();
+    console.log(soil_watering.join(''));
+    if (soil_watering[0] == '1') {
+        patchRequest(url_watering_open, 'watering', 1, 1);
+    } else if (soil_watering[0] == '0') {
+        patchRequest(url_watering_close, 'watering', 1, 1);
+    }
+    axios.get("http://91.240.84.86:5000/save-state?parameter=soil_watering&state=" + soil_watering.join(''))
+})
 
+document.getElementById('soilWateringSwitch2').addEventListener("change", function() {
+    soil_watering[1] = (Number(document.getElementById('soilWateringSwitch2').checked)).toString();
+    console.log(soil_watering.join(''));
+    if (soil_watering[1] == '1') {
+        patchRequest(url_watering_open, 'watering', 1, 2);
+    } else if (soil_watering[1] == '0') {
+        patchRequest(url_watering_close, 'watering', 1, 2);
+    }
+    axios.get("http://91.240.84.86:5000/save-state?parameter=soil_watering&state=" + soil_watering.join(''))
+})
 
+document.getElementById('soilWateringSwitch3').addEventListener("change", function() {
+    soil_watering[2] = (Number(document.getElementById('soilWateringSwitch3').checked)).toString();
+    console.log(soil_watering.join(''));
+    if (soil_watering[2] == '1') {
+        patchRequest(url_watering_open, 'watering', 1, 3);
+    } else if (soil_watering[2] == '0') {
+        patchRequest(url_watering_close, 'watering', 1, 3);
+    }
+    axios.get("http://91.240.84.86:5000/save-state?parameter=soil_watering&state=" + soil_watering.join(''))
+})
+
+document.getElementById('soilWateringSwitch4').addEventListener("change", function() {
+    soil_watering[3] = (Number(document.getElementById('soilWateringSwitch4').checked)).toString();
+    console.log(soil_watering.join(''));
+    if (soil_watering[3] == '1') {
+        patchRequest(url_watering_open, 'watering', 1, 4);
+    } else if (soil_watering[3] == '0') {
+        patchRequest(url_watering_close, 'watering', 1, 4);
+    }
+    axios.get("http://91.240.84.86:5000/save-state?parameter=soil_watering&state=" + soil_watering.join(''))
+})
+
+document.getElementById('soilWateringSwitch5').addEventListener("change", function() {
+    soil_watering[4] = (Number(document.getElementById('soilWateringSwitch5').checked)).toString();
+    console.log(soil_watering.join(''));
+    if (soil_watering[4] == '1') {
+        patchRequest(url_watering_open, 'watering', 1, 5);
+    } else if (soil_watering[4] == '0') {
+        patchRequest(url_watering_close, 'watering', 1, 5);
+    }
+    axios.get("http://91.240.84.86:5000/save-state?parameter=soil_watering&state=" + soil_watering.join(''))
+})
+
+document.getElementById('soilWateringSwitch6').addEventListener("change", function() {
+    soil_watering[5] = (Number(document.getElementById('soilWateringSwitch6').checked)).toString();
+    console.log(soil_watering.join(''));
+    if (soil_watering[5] == '1') {
+        patchRequest(url_watering_open, 'watering', 1, 6);
+    } else if (soil_watering[5] == '0') {
+        patchRequest(url_watering_close, 'watering', 1, 6);
+    }
+    axios.get("http://91.240.84.86:5000/save-state?parameter=soil_watering&state=" + soil_watering.join(''))
+})
