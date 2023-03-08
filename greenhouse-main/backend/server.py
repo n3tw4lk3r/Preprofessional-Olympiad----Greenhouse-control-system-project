@@ -8,7 +8,6 @@ from flask_cors import CORS
 HOST = '91.240.84.86'
 PORT = 5000
 
-
 # значения параметров и состояния систем теплицы
 
 # при открытии веб-интерфейса фронтенд делает запрос к /get-state,
@@ -27,17 +26,14 @@ emergencyMode = 0
 app = Flask(__name__)
 CORS(app)
 
+
 @app.route("/save-state")
 def saveOnServer():
     """Сохраняет передаваемый параметр на сервере"""
     """Пример URL: http://91.240.84.86:5000/save-state?parameter=T&state=244"""
-    global T
-    global H
-    global Hb
-    global watering
-    global fork_drive
-    global soil_watering
-    global emergencyMode
+
+    global T, H, Hb, watering, fork_drive, soil_watering, emergencyMode
+
     parameter = request.args.get("parameter")
     state = request.args.get("state")
     if parameter == "T":
@@ -56,24 +52,21 @@ def saveOnServer():
         fork_drive = int(state)
         return jsonify({"new fork_drive" : fork_drive})
     elif parameter == "soil_watering":
-        soil_watering = int(state)
+        soil_watering = state
         return jsonify({"new soil_watering" : soil_watering})
     elif parameter == "emergencyMode":
         emergencyMode = int(state)
         return jsonify({"new emergencyMode" : emergencyMode})
     return jsonify({"msg": "error"})
 
+
 @app.route("/get-state")
 def getFromServer():
     """Передает состояние систем и параметров по запросу."""
     """Пример URL: http://91.240.84.86:5000/get-state?parameter=fork_drive"""
-    global T
-    global H
-    global Hb
-    global watering
-    global fork_drive
-    global soil_watering
-    global emergencyMode
+
+    global T, H, Hb, watering, fork_drive, soil_watering, emergencyMode
+
     parameter = request.args.get("parameter")
     if parameter == "T":
         return jsonify({"T" : T})
@@ -96,12 +89,14 @@ def getFromServer():
 def get_request():
     """Обрабатывает get-запрос, делает get-запрос к API организаторов. Возвращает ответ в формате JSON."""
     """Пример URL: http://91.240.84.86:5000/get?sensor_type=hum&sensor_id=1"""
+
     sensor_type = request.args.get("sensor_type")
     sensor_id = request.args.get("sensor_id")
     result = requests.get(
         "https://dt.miet.ru/ppo_it/api/" + sensor_type + "/" + sensor_id
     )
     result = json.loads(result.text)
+
     return jsonify(result)
 
 
@@ -109,6 +104,7 @@ def get_request():
 def patch_request():
     """Обрабатывает get-запрос, делает patch-запрос к API организаторов. Возвращает ответ в формате JSON."""
     """Пример URL: http://91.240.84.86:5000/patch?target=watering&state=0&id=5"""
+
     target = request.args.get("target")
     state = request.args.get("state")
     if target == "watering":
@@ -121,37 +117,39 @@ def patch_request():
             "https://dt.miet.ru/ppo_it/api/" + target, params={"state": state}
         )
     result = json.loads(result.text)
+    
     return jsonify(result)
 
 
 @app.route("/exportDB")
 def exportDB():
-    """Экспорт БД в два csv файла."""
+    """Экспорт БД в csv файл."""
 
-    connection = mysql.connector.connect(user="olyacodzel", password="r2W89t",
+    cnx = mysql.connector.connect(user="olyacodzel", password="r2W89t",
                                 database="sensordata", host="91.240.84.86")
-    cursor = connection.cursor()
+    cursor = cnx.cursor()
     file = open("sensordata.csv", "w")
-
-    queryHum = "SELECT * FROM hum;"
-    queryTemp_hum = "SELECT * FROM temp_hum;"
-
-    cursor.execute(queryHum)
     csv_writer = csv.writer(file)
-    csv_writer.writerow(['Датчики почвы'])
+
+    csv_writer.writerow(['Soil sensors'])
     csv_writer.writerow(['id', 'humidity', 'time'])
+
+    cursor.execute("SELECT * FROM hum;")
     for element in cursor:
         csv_writer.writerow(element)
-    cursor.execute(queryTemp_hum)
-    csv_writer.writerow(['Датчики воздуха'])
+
+    csv_writer.writerow(['Air sensors'])
     csv_writer.writerow(['id', 'temperature', 'humidity', 'time'])
+    cursor.execute("SELECT * FROM temp_hum;")
     for element in cursor:
         csv_writer.writerow(element)
-        
+
     cursor.close()
-    connection.close()
+    cnx.close()
     file.close()
+    
     return send_file("sensordata.csv", as_attachment=True)
+
 
 if __name__ == "__main__":
     app.run(debug=False, host=HOST, port=PORT)
