@@ -1,3 +1,6 @@
+// Не забыть добавить токен в заголовок всех запросов
+axios.defaults.headers.common["X-Auth-Token"] = "hBE8lk"
+
 // данные с датчиков
 let air_temp = [null, null, null, null];
 let air_hum = [null, null, null, null];
@@ -107,11 +110,9 @@ function setInitialSystemStates() {
         .then(response => {
             state = (JSON.stringify(response.data).split(":")[1]).split("}")[0];
             state = state.slice(1, 7);
-            console.log(state);
 
             for (let i = 0; i < 6; i++) {
                 soil_watering[i] = state[i].toString();
-                console.log(state[i]);
                 divId = "soilWateringSwitch" + (i + 1);
                 if (state[i] == '1') {
                     document.getElementById(divId).checked = true;
@@ -119,7 +120,6 @@ function setInitialSystemStates() {
                     document.getElementById(divId).checked = false;
                 }
             }
-            //console.log(soil_watering.join(''));
         })
     axios.get("http://91.240.84.86:5000/get-state?parameter=emergencyMode")
         .then(response => {
@@ -299,6 +299,23 @@ function serveCSV() {
     });
 }
 
+function writeDB() {
+    let elements = document.getElementsByName("sensor_type");
+    let newHumidity = document.getElementById("newHum").value;
+    let newId = document.getElementById("newId").value;
+
+    if (elements[0].checked) {
+        // воздух, temp_hum
+        let newTemperature = document.getElementById("newTemp").value;
+        let url = "http://91.240.84.86:5000/db-insert?sensor_type=temp_hum&sensor_id=" + newId + "&humidity=" + newHumidity + "&temperature=" + newTemperature;
+        axios.get(url)
+    }
+    else if (elements[1].checked) {
+        // почва, hum
+        let url =  "http://91.240.84.86:5000/db-insert?sensor_type=hum&sensor_id=" + newId + "&humidity=" + newHumidity + "&temperature=None";
+        axios.get(url)
+    }
+}
 
 
 // создаём графики
@@ -426,7 +443,6 @@ document.querySelector(".emergencyModeSwitch").addEventListener("change", functi
 // почему-то если пытаться переписать код ниже циклом, он перестает работать
 document.getElementById('soilWateringSwitch1').addEventListener("change", function() {
     soil_watering[0] = (Number(document.getElementById('soilWateringSwitch1').checked)).toString();
-    console.log(soil_watering.join(''));
     if (soil_watering[0] == '1') {
         patchRequest(url_watering_open, 'watering', 1, 1);
     } else if (soil_watering[0] == '0') {
@@ -437,7 +453,6 @@ document.getElementById('soilWateringSwitch1').addEventListener("change", functi
 
 document.getElementById('soilWateringSwitch2').addEventListener("change", function() {
     soil_watering[1] = (Number(document.getElementById('soilWateringSwitch2').checked)).toString();
-    console.log(soil_watering.join(''));
     if (soil_watering[1] == '1') {
         patchRequest(url_watering_open, 'watering', 1, 2);
     } else if (soil_watering[1] == '0') {
@@ -448,7 +463,6 @@ document.getElementById('soilWateringSwitch2').addEventListener("change", functi
 
 document.getElementById('soilWateringSwitch3').addEventListener("change", function() {
     soil_watering[2] = (Number(document.getElementById('soilWateringSwitch3').checked)).toString();
-    console.log(soil_watering.join(''));
     if (soil_watering[2] == '1') {
         patchRequest(url_watering_open, 'watering', 1, 3);
     } else if (soil_watering[2] == '0') {
@@ -459,7 +473,6 @@ document.getElementById('soilWateringSwitch3').addEventListener("change", functi
 
 document.getElementById('soilWateringSwitch4').addEventListener("change", function() {
     soil_watering[3] = (Number(document.getElementById('soilWateringSwitch4').checked)).toString();
-    console.log(soil_watering.join(''));
     if (soil_watering[3] == '1') {
         patchRequest(url_watering_open, 'watering', 1, 4);
     } else if (soil_watering[3] == '0') {
@@ -470,7 +483,6 @@ document.getElementById('soilWateringSwitch4').addEventListener("change", functi
 
 document.getElementById('soilWateringSwitch5').addEventListener("change", function() {
     soil_watering[4] = (Number(document.getElementById('soilWateringSwitch5').checked)).toString();
-    console.log(soil_watering.join(''));
     if (soil_watering[4] == '1') {
         patchRequest(url_watering_open, 'watering', 1, 5);
     } else if (soil_watering[4] == '0') {
@@ -481,7 +493,6 @@ document.getElementById('soilWateringSwitch5').addEventListener("change", functi
 
 document.getElementById('soilWateringSwitch6').addEventListener("change", function() {
     soil_watering[5] = (Number(document.getElementById('soilWateringSwitch6').checked)).toString();
-    console.log(soil_watering.join(''));
     if (soil_watering[5] == '1') {
         patchRequest(url_watering_open, 'watering', 1, 6);
     } else if (soil_watering[5] == '0') {
