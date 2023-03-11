@@ -151,5 +151,34 @@ def exportDB():
     return send_file("sensordata.csv", as_attachment=True)
 
 
+@app.route("/db-insert")
+def dbInsert():
+    """Запись пользовательских показаний датчиков в БД."""
+    """Пример url: http://91.240.84.86:5000/db-insert?sensor_type=hum&sensor_id=2&humidity=99.99&temperature=None"""
+    sensor_type = request.args.get("sensor_type")
+    sensor_id = request.args.get("sensor_id")
+    humidity = request.args.get("humidity")
+    temperature = request.args.get("temperature")
+    if sensor_type == "hum":
+        query = "INSERT INTO hum(id, humidity, DateTime) VALUES (" + sensor_id + "," + humidity + ", NOW())"
+    elif sensor_type == "temp_hum":
+        query = "INSERT INTO temp_hum(id, temperature, humidity, DateTime) VALUES (" + sensor_id + "," + temperature + "," + humidity + ", NOW())"
+
+    try:
+        cnx = mysql.connector.connect(user="olyacodzel", password="r2W89t",
+                                    database="sensordata", host="91.240.84.86")
+        cursor = cnx.cursor()
+        cursor.execute(query)
+        cnx.commit()
+
+        cursor.close()
+        cnx.close()
+
+        return jsonify({"msg" : "done"})
+    
+    except Error as e:
+      return jsonify({"msg" : str(e)})
+
+
 if __name__ == "__main__":
     app.run(debug=False, host=HOST, port=PORT)
