@@ -12,7 +12,7 @@ def GetDataFromServ(hostname="", username="", password=""):
     ) as connection:
           #hum
           for i in range(1,7):
-              url = 'https://dt.miet.ru/ppo_it/api/hum/' + str(i)
+              url = 'http://91.240.84.86:5000/get?sensor_type=hum&sensor_id=' + str(i)
               response = requests.get(url)
               data_hum = response.json()
               insert_hum = "INSERT INTO hum(id, humidity, DateTime) VALUES ("+str(data_hum['id'])+"," +str(data_hum['humidity'])+ ", NOW())"
@@ -20,7 +20,7 @@ def GetDataFromServ(hostname="", username="", password=""):
               connection.commit()
           #temp_hum
           for k in range(1,5):
-              url = 'https://dt.miet.ru/ppo_it/api/temp_hum/' + str(k)
+              url = 'http://91.240.84.86:5000/get?sensor_type=temp_hum&sensor_id=' + str(k)
               response = requests.get(url)
               data_temp_hum = response.json()
               insert_temp_hum = "INSERT INTO temp_hum(id, temperature, humidity, DateTime) VALUES (" + str(data_temp_hum['id']) + "," + str(data_temp_hum['temperature']) + "," +str(data_temp_hum['humidity']) + ", NOW())"
